@@ -1,0 +1,5 @@
+----------------------------
+Ngx Spinner Loading
+----------------------------
+https://www.npmjs.com/package/ngx-spinner#usage
+https://www.youtube.com/watch?v=XkXwEHj3QPI

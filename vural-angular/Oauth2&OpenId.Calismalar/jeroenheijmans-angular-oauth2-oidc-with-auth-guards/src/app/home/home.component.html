@@ -1,0 +1,11 @@
+ <!-- BTC TIKER API RESULT -->
+ <div class="row" style="border-style: solid; border-width: 5px;">
+    <div class="index-list" id="indexPairList">
+        <div *ngFor="let item of data" attr.data-symbol="{{item.pair}}" pairprice="34840" class="list-item">
+            <label>pair : {{item.pair}}</label>
+            <label>high : {{item.high}} / last : {{item.last}}</label>
+        </div>
+    </div>
+</div>
+<!-- /BTC TIKER API RESULT -->
+<router-outlet></router-outlet>

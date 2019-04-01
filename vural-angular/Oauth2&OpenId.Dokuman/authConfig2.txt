@@ -1,0 +1,398 @@
+
+Injection Tokens Example
+
+/app/app-config.module.ts
+
+import { NgModule, InjectionToken } from '@angular/core';
+import { environment } from '../environments/environment';
+
+export let APP_CONFIG = new InjectionToken<AppConfig>('app.config');
+
+export class AppConfig {
+  apiEndpoint: string;
+}
+
+export const APP_DI_CONFIG: AppConfig = {
+  apiEndpoint: environment.apiEndpoint
+};
+
+@NgModule({
+  providers: [{
+    provide: APP_CONFIG,
+    useValue: APP_DI_CONFIG
+  }]
+})
+export class AppConfigModule { }
+/app/app.module.ts
+
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { AppConfigModule } from './app-config.module';
+
+@NgModule({
+  declarations: [
+    // ...
+  ],
+  imports: [
+    // ...
+    AppConfigModule
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+Now you can just DI it into any component, service, etc:
+
+/app/core/auth.service.ts
+
+import { Injectable, Inject } from '@angular/core';
+import { Http, Response } from '@angular/http';
+import { Router } from '@angular/router';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
+import 'rxjs/add/observable/throw';
+
+import { APP_CONFIG, AppConfig } from '../app-config.module';
+import { AuthHttp } from 'angular2-jwt';
+
+@Injectable()
+export class AuthService {
+
+  constructor(
+    private http: Http,
+    private router: Router,
+    private authHttp: AuthHttp,
+    @Inject(APP_CONFIG) private config: AppConfig
+  ) { }
+
+  /**
+   * Logs a user into the application.
+   * @param payload
+   */
+  public login(payload: { username: string, password: string }) {
+    return this.http
+      .post(`${this.config.apiEndpoint}/login`, payload)
+      .map((response: Response) => {
+        const token = response.json().token;
+        sessionStorage.setItem('token', token); // TODO: can this be done else where? interceptor
+        return this.handleResponse(response); // TODO:  unset token shouldn't return the token to login
+      })
+      .catch(this.handleError);
+  }
+
+  // ...
+}
+You can then also type check the config using the exported AppConfig.
+
+shareimprove this answer
+edited Dec 6 '17 at 3:19
+answered Apr 3 '17 at 20:22
+
+mtpultz
+4,716853128
+No, but you can literally copy and paste the first part into a file, import it into your app.module.ts file, and the DI it anywhere and output it to the console. I would take longer to set this up in a plunker then it would to do those steps. – mtpultz Apr 3 '17 at 20:25
+Oh I thought You already have a plunker for this :-) Thank you. – Royi Namir Apr 3 '17 at 20:25 
+For those who want : plnkr.co/edit/2YMZk5mhP1B4jTgA37B8?p=preview – Royi Namir Apr 3 '17 at 20:39
+Does it have to be used via Interface ? – Royi Namir Apr 3 '17 at 20:57
+1
+I don't believe you need to export the AppConfig interface/class. You definitely don't need to use it when doing DI. To make this work in one file it had to be a class instead of an interface, but that doesn't matter. In fact the style guide suggest using classes instead of interfaces since it means less code and you can still type check using them. With regards to its use by the InjectionToken via generics that is something you'll want to include. – mtpultz Apr 4 '17 at 0:05 
+show 3 more comments
+
+up vote
+105
+down vote
+If you are using angular-cli, there is yet another option:
+
+Angular CLI provides environment files in src/environments (default ones are environment.ts (dev) and environment.prod.ts (production)).
+
+Note that you need to provide the config parameters in all environment.* files, e.g.,
+
+environment.ts:
+
+export const environment = {
+  production: false,
+  apiEndpoint: 'http://localhost:8000/api/v1'
+};
+environment.prod.ts:
+
+export const environment = {
+  production: true,
+  apiEndpoint: '__your_production_server__'
+};
+and use them in your service (the correct environment file is chosen automatically):
+
+api.service.ts
+
+// ... other imports
+import { environment } from '../../environments/environment';
+
+@Injectable()
+export class ApiService {     
+
+  public apiRequest(): Observable<MyObject[]> {
+    const path = environment.apiEndpoint + `/objects`;
+    // ...
+  }
+
+// ...
+}
+shareimprove this answer
+answered Apr 10 '17 at 6:48
+
+tilo
+11.3k44570
+this is a simple yet elegant solution. Thanks @tilo – Jonathan Cardoz Nov 15 '17 at 18:43
+2
+its working fine.But while moving build it is also changed as bundle.I should change configuartion in my serve not in code after moving to production – kamalav Jan 22 at 6:55
+11
+This is somewhat of an anti-pattern in normal software development; the API url is just configuration. It shouldn't take a re-build to re-configure an app for a different environment. It should be build once, deploy many times (pre-prod, staging, prod, etc). – Matt Tester Feb 14 at 22:54
+2
+@MattTester This is actually what is now an official Angular-CLI story. If you happen to have a better answer to this question: feel free to post it! – tilo Feb 15 at 10:05
+4
+is it configurable after ng build ? – N.K Feb 26 at 4:36
+show 6 more comments
+up vote
+4
+down vote
+Here's my solution, loads from .json to allow changes without rebuilding
+
+import { Injectable, Inject } from '@angular/core';
+import { Http } from '@angular/http';
+import { Observable } from 'rxjs/Observable';
+import { Location } from '@angular/common';
+
+@Injectable()
+export class ConfigService {
+
+    private config: any;
+
+    constructor(private location: Location, private http: Http) {
+    }
+
+    async apiUrl(): Promise<string> {
+        let conf = await this.getConfig();
+        return Promise.resolve(conf.apiUrl);
+    }
+
+    private async getConfig(): Promise<any> {
+        if (!this.config) {
+            this.config = (await this.http.get(this.location.prepareExternalUrl('/assets/config.json')).toPromise()).json();
+        }
+        return Promise.resolve(this.config);
+    }
+}
+and config.json
+
+{
+    "apiUrl": "http://localhost:3000/api"
+}
+shareimprove this answer
+answered Feb 28 at 17:46
+
+PJM
+413
+The problem with this approach is that config.json is open to the world. How would you prevent somebody to type www.mywebsite.com/assetts/config.json? – Alberto L. Bonfiglio Mar 11 at 17:12 
+1
+@AlbertoL.Bonfiglio you configure the server not to allow access from outside to config.json file (or place it in a directory which has no public access) – Alex Pandrea Mar 26 at 9:20 
+add a comment
+up vote
+0
+down vote
+Here's my two solutions for this
+
+1. Store in json files
+
+Just make a json file and get in your component by $http.get() method. If I was need this very low then it's good and quick.
+
+2. Store by using data services
+
+If you want to store and use in all components or having large usage then it's better to use data service. Like this :
+
+Just create static folder inside src/app folder.
+
+Create a file named as fuels.ts into static folder. You can store other static files here also. Let define your data like this. Assuming you having fuels data.
+
+__
+
+export const Fuels {
+
+   Fuel: [
+    { "id": 1, "type": "A" },
+    { "id": 2, "type": "B" },
+    { "id": 3, "type": "C" },
+    { "id": 4, "type": "D" },
+   ];
+   }
+Create a file name static.services.ts
+__
+
+import { Injectable } from "@angular/core";
+import { Fuels } from "./static/fuels";
+
+@Injectable()
+export class StaticService {
+
+  constructor() { }
+
+  getFuelData(): Fuels[] {
+    return Fuels;
+  }
+ }`
+Now You can make this available for every module
+just import in app.module.ts file like this and change in providers
+
+import { StaticService } from './static.services';
+
+providers: [StaticService]
+Now use this as StaticService in any module.
+
+That's All.
+
+shareimprove this answer
+answered Aug 23 at 11:31
+
+amku91
+409516
+add a comment
+Your Answer
+
+ 
+Sign up or log in
+ Sign up using Google
+ Sign up using Facebook
+ Sign up using Email and Password
+Post as a guest
+Name
+
+Email
+Required, but never shown
+
+
+Post Your Answer
+By clicking "Post Your Answer", you acknowledge that you have read our updated terms of service, privacy policy and cookie policy, and that your continued use of the website is subject to these policies.
+Not the answer you're looking for? Browse other questions tagged javascript angular or ask your own question.
+asked
+
+1 year, 7 months ago
+
+viewed
+
+34,086 times
+
+active
+
+3 months ago
+
+Looking for a job?
+Software Engineer, Fraud Prevention
+OloNo office location
+REMOTE
+c#.net
+Core C# Software Engineer
+HazelcastNo office location
+REMOTE
+c#.net
+Internal Support Engineer
+Stack OverflowNo office location
+$95K - $115KREMOTE
+powershellbash
+.Net Web Developer
+SESTEKŞişli, Turkey
+c#asp.net-mvc
+Linked
+189
+Define global constants in Angular 2
+1
+How get Angular 5 application environment variable from NPM package?
+0
+How run Angular2 (front-end) and Symfony3 (back-end API) together in development zone?
+2
+Best practice for string String in Ionic 3
+0
+angular 4 application with Visual studio 2017 dot net core. how to access appsetting.json configuration key from typescript file
+2
+Angular storing reference data
+0
+How to parameterize angular application
+Related
+4722
+What is the most efficient way to deep clone an object in JavaScript?
+1417
+What is the best way to detect a mobile device in jQuery?
+1022
+What is the difference between angular-route and angular-ui-router?
+69
+How do I share data between components in Angular 2?
+517
+Huge number of files generated for every Angular project
+2
+How to set input model value from service in Angular?
+2
+Angular2 inject a service from AppModule into dependent NgModule's component at runtime?
+1
+How does these angular email directive code snippets connect
+1
+Angular dependency injection: providers vs imports
+0
+Angular, component properties to service
+Hot Network Questions
+Finding singulars/sets of local maxima/minima in 1D-numpy array (once again)
+Why don’t we feel the Earth rotating beneath us?
+How important is to have some form of electrical isolation in MIDI connectors?
+How to accurately detect children with super strength?
+Where did the Wikipedia page for IOTA go?
+How can I handle my DM's requirement that I play a female character in his one-shot when I don't feel comfortable with doing so?
+Why do we call O2 oxygen?
+How to ensure international logo implying a white male, won’t be offensive?
+Do Maxwell's equations 'EXACTLY' predict the speed of light?
+Why is Carlsen criticized for poor preparation?
+How is Marsh still alive?
+Should I close port 80 forever and ever since the 2018 Google-indicated web-security initiatives?
+Why shouldn't a bank robbery without threats be legal?
+Rearrangement of lists of strings
+Is it better to use an unsuitable hashing algorithm instead of none at all?
+Dealing with a team member who ignores company structure
+Probability of three sequential events
+What logical fallacy is "If you don't like it, move!"?
+Could a name server resolve IP addresses dynamically based on some strategy?
+Why is InSight's nylon parachute a "soft good"?
+Why do politicians refuse to answer hypothetical questions?
+How did Apple ][ basic programs protect against listing?
+TextEdit app is displaying wide borders at bottom and right corners
+What makes the bicycles in Amsterdam suitable for riding with jeans on?
+ question feed
+STACK OVERFLOW
+Questions
+Jobs
+Developer Jobs Directory
+Salary Calculator
+Help
+Mobile
+Disable Responsiveness
+PRODUCTS
+Teams
+Talent
+Engagement
+Enterprise
+COMPANY
+About
+Press
+Work Here
+Legal
+Privacy Policy
+Contact Us
+STACK EXCHANGE
+NETWORK
+Technology
+Life / Arts
+Culture / Recreation
+Science
+Other
+Blog
+Facebook
+Twitter
+LinkedIn
+site design / logo © 2018 Stack Exchange Inc; user contributions licensed under cc by-sa 3.0 with attribution required. rev 2018.11.22.32249
+
+ 

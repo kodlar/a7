@@ -1,0 +1,50 @@
+#GTHUB - Implicit flow authentication using angular-oauth2-oidc (Angular)
+https://github.com/jeroenheijmans/sample-angular-oauth2-oidc-with-auth-guards
+http://www.lankapura.net/blog/2017/12/13/angular-asp-net-core-authentication-with-identity-server-4
+
+#manfredsteyer
+#angular-oauth2-oidc (Support for OAuth 2 and OpenId Connect (OIDC) in Angular.)
+https://github.com/manfredsteyer/angular-oauth2-oidc
+https://manfredsteyer.github.io/angular-oauth2-oidc/docs/additional-documentation/original-config-api.html
+
+
+#Hier kommst du nicht rein: Authentifizierung und Autorisierung mit Angular
+https://jaxenter.de/authentifizierung-autorisierung-angular-56732
+
+#Google auth integration with Angular 5 and angular-oauth2-oidc
+https://medium.com/@ishmeetsingh/google-auth-integration-with-angular-5-and-angular-oauth2-oidc-ed01b997e1df
+
+
+#Angular Authentication: Using Route Guards
+https://ryanchenkie.com/angular-authentication-using-route-guards
+
+
+
+https://www.softwarearchitekt.at/post/2016/07/03/authentication-in-angular-2-with-oauth2-oidc-and-guards-for-the-newest-new-router-english-version.aspx
+https://www.linkedin.com/pulse/implicit-flow-authentication-using-angular-ghanshyam-shukla
+https://www.sparkbit.pl/angular-2-route-guards-real-life-example/
+https://dev.to/ped4enko/how-to-build-an-angular-app-with-authentication-in-30-minutes-506k
+
+
+
+#Implicit flow authentication using angular-oauth2-oidc (Angular)
+https://www.linkedin.com/pulse/implicit-flow-authentication-using-angular-ghanshyam-shukla
+
+#SPA Authentiction using OpenID Connect, Angular CLI and oidc-client
+https://www.scottbrady91.com/Angular/SPA-Authentiction-using-OpenID-Connect-Angular-CLI-and-oidc-client
+
+#Creating an OpenID connect system with Angular 5 and IdentityServer4 (OIDC part 1)
+https://christianlydemann.com/creating-an-openid-connect-system-with-angular-5-and-identityserver4-oidc-part-1/
+
+#Angular 7 - User Registration and Login Example & Tutorial
+http://jasonwatmore.com/post/2018/10/29/angular-7-user-registration-and-login-example-tutorial
+
+https://github.com/Gimly/SampleNetCoreAngularKeycloak
+
+
+
+
+#MANUEL
+https://auth0.com/blog/angular-2-authentication/
+http://tphangout.com/angular-2-building-an-app-to-demonstrate-oauth-2/
+https://stackblitz.com/edit/angular-6-registration-login-example?file=app%2F_services%2Fauthentication.service.ts

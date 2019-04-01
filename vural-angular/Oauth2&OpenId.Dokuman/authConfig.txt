@@ -1,0 +1,227 @@
+import { Component } from '@angular/core';
+import { OAuthService } from 'angular-oauth2-oidc';
+ 
+@Component({
+  selector: 'flight-app',
+  templateUrl: './app.component.html'
+})
+export class AppComponent {
+ 
+  constructor(private oauthService: OAuthService) {
+ 
+    // Für den Client registrierte Id
+    this.oauthService.clientId = "angular-app-1";
+ 
+    // Url des Angular-Clients, an die das Token zu senden ist
+    this.oauthService.redirectUri = window.location.origin + "/index.html";
+ 
+    // Rechte, die der Client wahrnehmen möchte
+    this.oauthService.scope = "openid profile email flightapi_user";
+ 
+    // Definieren, dass auch ein Id-Token abgerufen werden soll
+    this.oauthService.oidc = true;
+ 
+    // Festlegen, ob Tokens im localStorage oder im sessionStorage zu speichern sind
+    this.oauthService.setStorage(sessionStorage);
+ 
+    let url = 'https://hpg-keycloak.northeurope.cloudapp.azure.com/auth/realms/angular-spring/.well-known/openid-configuration';
+    this.oauthService.loadDiscoveryDocument(url).then((doc) => {
+      // Eventuelle Tokens aus Url entnehmen
+      this.oauthService.tryLogin({});
+    });
+  }
+}
+
+
+// 0. LOAD CONFIG:
+// First we have to check to see how the IdServer is
+// currently configured:
+this.authService.loadDiscoveryDocument()
+
+  // 1. HASH LOGIN:
+  // Try to log in via hash fragment after redirect back
+  // from IdServer from initImplicitFlow:
+  .then(() => this.authService.tryLogin())
+
+  .then(() => {
+    if (!this.authService.hasValidAccessToken()) {
+
+      // 2. SILENT LOGIN:
+      // Try to log in via silent refresh because the IdServer
+      // might have a cookie to remember the user, so we can
+      // prevent doing a redirect:
+      this.authService.silentRefresh()
+        .catch(result => {
+          // Subset of situations from https://openid.net/specs/openid-connect-core-1_0.html#AuthError
+          // Only the ones where it's reasonably sure that sending the
+          // user to the IdServer will help.
+          const errorResponsesRequiringUserInteraction = [
+            'interaction_required',
+            'login_required',
+            'account_selection_required',
+            'consent_required',
+          ];
+
+          if (result && result.reason && errorResponsesRequiringUserInteraction.indexOf(result.reason.error) >= 0) {
+
+            // 3. ASK FOR LOGIN:
+            // At this point we know for sure that we have to ask the
+            // user to log in, so we redirect them to the IdServer to
+            // enter credentials:
+            this.authService.initImplicitFlow();
+          }
+        });
+    }
+  });
+  
+  
+  
+https://manfredsteyer.github.io/angular-oauth2-oidc/docs/additional-documentation/refreshing-a-token-(silent-refresh).html
+
+
+// set authConfig on dev environment
+import { AuthConfig } from 'angular-oauth2-oidc';
+export const environment = {
+  production: false,
+  authConfig: {
+    issuer: 'http://localhost:44388',
+    redirectUri: 'http://localhost:4200/signin-oidc', // signin-oidc
+    postLogoutRedirectUris: 'http://localhost:4200/signout-callback-oidc',
+    clientId: 'web-badders-rank',
+    responseType : 'id_token token',
+    scope: 'openid profile badders-rank-api',
+    requireHttps: false
+  }
+};
+
+export class AppComponent implements OnInit {
+  title = 'Badders Rank';
+  isAuthorized: boolean; 
+  constructor(private oauthService: OAuthService) {
+    this.configureWithNewConfigApi();
+  }
+  private configureWithNewConfigApi(): void {
+    this.oauthService.configure(environment.authConfig);
+    this.oauthService.tokenValidationHandler = new JwksValidationHandler();
+    this.oauthService.loadDiscoveryDocumentAndTryLogin();
+  }
+  ngOnInit(): void {
+      this.isAuthorized = this.oauthService.hasValidAccessToken(); 
+  }
+
+  logIn() {
+    this.oauthService.initImplicitFlow();
+  }
+  logOut() {
+    this.oauthService.logOut();
+  }
+}
+
+// in app.component.html, simply use `*ngIf` on `isAuthorized`
+<div class="container" *ngIf="isAuthorized">
+    <router-outlet style="margin-bottom:75px"></router-outlet>
+</div>
+
+  <div *ngIf="!isAuthorized">
+    <p>
+      <strong>Welcome! Click
+        <a (click)="logIn()">here</a> to log in.</strong>
+    </p>
+  </div> 
+  
+  
+  
+export const aadB2cNoDiscoveryConfig: AuthConfig = {
+  'clientId': XXX
+  'redirectUri': XXX
+  'loginUrl': XXX
+  'logoutUrl': XXX
+  'scope': 'openid https://mytenant.onmicrosoft.com/myapi/user_impersonation',
+  'oidc': true,
+  'issuer': 'https://login.microsoftonline.com/XXX/v2.0/',
+  'tokenEndpoint': 'https://login.microsoftonline.com/XXX.onmicrosoft.com/oauth2/v2.0/token?p=b2c_1_signin',
+  'responseType': 'id_token token',
+  'clearHashAfterLogin': true,
+  'disableAtHashCheck': true,
+  'showDebugInformation': true,
+  'strictDiscoveryDocumentValidation': false,
+  'jwks': {
+    'keys': [
+      {
+        kid: XXX
+        nbf: XXX,
+        use: XXX
+        kty: XXX
+        e: XXX
+        n: XXX
+      }]
+  }
+
+  
+
+configure(): void {
+    const config: AuthConfig = {
+      issuer: this.config.getIdentityUrl(),
+      logoutUrl: this.config.getIdentityUrl() + '/connect/endsession',
+      redirectUri: window.location.origin + '/',
+      silentRefreshRedirectUri: window.location.origin + '/silent-refresh.html',
+      clientId: 'my_client_id',
+      scope: 'openid profile my_api',
+      sessionChecksEnabled: true,
+    };
+
+    this.oAuthService.configure(config);
+    this.oAuthService.tokenValidationHandler = new JwksValidationHandler();
+
+    this.oAuthService
+      .loadDiscoveryDocumentAndLogin()
+      .then((_) => this.loadUserProfile());
+
+    this.oAuthService.setupAutomaticSilentRefresh();
+}
+
+private loadUserProfile() {
+  this.oAuthService.loadUserProfile()
+    .then((userProfile) => {
+      const user = new User(userProfile['name']);
+      this.userSubject.next(user);
+    });
+}
+this.oauthService.events.filter(e => e.type ==='session_terminated')
+                  .subscribe(e => {this.oauthService.logout();})
+
+
+				  
+				  
+export const authConfig: AuthConfig = {
+  issuer: 'https://your-tenant-name.eu.auth0.com/',
+  clientId: 'your-spa-client-id-here',
+  redirectUri: window.location.origin + '/index.html',
+  scope: 'openid profile email',
+  customQueryParams: {
+    audience: 'https://your-api-audience-id.example.com',
+  },
+};
+
+
+
+
+
+this.oauthService.loadDiscoveryDocumentAndTryLogin()
+	.then(result => {
+		if (!this.oauthService.hasValidIdToken() || !this.oauthService.hasValidAccessToken()) {
+			this.oauthService.initImplicitFlow("How do I get the requested URL here?");
+		}
+	});
+// @TODO: Implement more event handlers
+this.oAuthService.events.subscribe(({ type }: OAuthEvent) => {
+  switch (type) {
+    case 'token_received':
+      return this.router.navigate([path]);
+  }
+})
+this.oauthService.tryLogin({
+    onTokenReceived: (info) => {
+       this.router.navigate([path]);
+    }
+});

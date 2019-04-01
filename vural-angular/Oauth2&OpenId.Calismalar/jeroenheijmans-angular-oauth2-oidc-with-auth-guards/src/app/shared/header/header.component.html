@@ -1,0 +1,51 @@
+<header class="header">  
+<div class="fixed back">
+    <div class="container">
+        <div class="row">
+            <nav class="navbar navbar-default">
+                <div class="navbar-header">
+                    <button class="navbar-toggle" type="button"></button>
+                    <a href="/" class="navbar-brand"></a>
+                        <a href="/account/login" class="navbar-login"></a>
+                </div>
+                <div class="navbar-collapse">
+                    <div class="navbar-content">
+                        <span class="navbar-logo"></span>
+                        <ul class="nav navbar-nav">
+                            <li>
+                                <a href="javascript:void(0)" id="showGraph" data-ref="/Home/GetGraphData" data-toggle="tooltip" data-original-title="" title="">FİYAT GRAFİĞİ</a>
+                            </li>
+                            <li>
+                                <a href="javascript:void(0)" class="dropdown-link">ÖNEMLİ BİLGİLER</a>
+                                <div class="dropdown-list">
+                                    <ul class="menu-list">
+                                        <li><a href="https://www.btcturk.com/yardim/bitcoin-nedir">Bitcoin nedir?</a></li>
+                                        <li><a href="/Orderbook">Emir Defteri</a></li>
+                                        <li><a href="https://www.btcturk.com/yardim/komisyonlar">Komisyonlar</a></li>
+                                        <li><a href="https://www.btcturk.com/yardim/hesap-onayi-ve-limitler">Limitler ve Kurallar</a></li>
+                                        <li><a href="https://www.btcturk.com/yardim/guvenlik">Güvenlik</a></li>
+                                        <li><a href="/home/news">Duyurular</a></li>
+                                        <li><a href="https://www.btcturk.com/yardim/basinda-btcturk">Basında BtcTurk</a></li>
+                                        <li><a href="https://www.btcturk.com/yardim/medya-materyalleri">Medya Materyalleri</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            
+                            <li>
+                                <a href="http://destek.btcturk.com" target="_none">YARDIM MERKEZİ</a>
+                            </li>
+                            <li>                                
+                                <a href="/account/login" class="alt" id="logInButtonMain">ÜYE GİRİŞİ / {{isAuthenticated | async}}</a>
+                            </li>
+                            <li>
+                                <a href="/Home/ChangeCulture?lang=en-GB" class="lang-link">ENGLISH</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="navbar-back"></div>
+                </div>
+            </nav>
+        </div>
+    </div>
+</div>
+</header>

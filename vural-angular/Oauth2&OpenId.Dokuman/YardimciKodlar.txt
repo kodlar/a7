@@ -1,0 +1,260 @@
+Observable.timer(1000).subscribe(()=>{
+        this.deepLinker.updateLocation(redirect.substring(window.location.origin.length+2),null);
+      })
+	  
+	  
+isLoggedIn() {
+    if (this.oauthService.getAccessToken() === null) {
+      return false;
+    }
+    return true;
+  }
+
+  logout() {
+    this.oauthService.logOut();
+    location.reload();
+  }
+
+logAuthData() {
+    console.log(this.oauthService.hasValidAccessToken());
+  }
+  
+  
+ngOnInit() {
+    window.addEventListener(
+        'storage',
+        this.storageEventListener.bind(this)
+    );
+    // this is for handle the normal redirect when we login from this app
+    this.oauthService.events.subscribe(({ type }: OAuthEvent) => {
+        switch (type) {
+            case 'token_received': {
+                this.checkLoginState();
+            }
+        }
+    });
+    this.checkLoginState();
+}
+private storageEventListener(event: StorageEvent) {
+    // if there is a session change and claims is missing, means I am no longer logged in
+    if (event.storageArea === sessionStorage) {
+        if (!sessionStorage.getItem('id_token_claims_obj')) {
+            this.isLoggedIn = false;
+        }
+    }
+}
+
+
+checkLoginState() {
+    const claims = this.oauthService.getIdentityClaims();
+    if (!claims) {
+        if (this.ssoInterval) {
+            // if we are waiting on response, return;
+            return;
+        }
+        // try to get a token if already logged in somewhere else
+        this.oauthService
+            .loadDiscoveryDocument()
+            .then(() => this.oauthService.tryLogin())
+            .then(() => {
+                if (!this.oauthService.hasValidAccessToken()) {
+                    this.setupSSOInterval();
+                    this.oauthService.silentRefresh().catch(err => {
+                        // this will throws a time_out error as we don't have a 
+valid token to refresh
+                        // console.error('refresh error', err);
+                        this.clearSSOInterval();
+                    });
+                }
+            })
+            .catch(e => {
+                // console.log(e);
+                // if not logged in anywhere, it will throw a token error.
+                this.clearSSOInterval();
+            });
+        return;
+    }
+    if (this.oauthService.getIdTokenExpiration() < new Date().getTime()) {
+        this.userService.removeToken();
+        return this.logout();
+    }
+    this.isLoggedIn = true;
+    this.userService.authenticateWithNID(claims['email']);
+}
+private setupSSOInterval() {
+    this.ssoInterval = setInterval(() => {
+        if (this.isLoggedIn) {
+            clearInterval(this.ssoInterval);
+        } else {
+            this.checkLoginState();
+        }
+    }, 1000);
+}
+private clearSSOInterval() {
+    if (this.ssoInterval) {
+        clearInterval(this.ssoInterval);
+    }
+}
+
+
+checkLoginState() {
+    const claims = this.oauthService.getIdentityClaims();
+    if (!claims) {
+        if (this.ssoInterval) {
+            // if we are waiting on response, return;
+            return;
+        }
+        // try to get a token if already logged in somewhere else
+        this.oauthService
+            .loadDiscoveryDocument()
+            .then(() => this.oauthService.tryLogin())
+            .then(() => {
+                if (!this.oauthService.hasValidAccessToken()) {
+                    this.setupSSOInterval();
+                    this.oauthService.silentRefresh().catch(err => {
+                        // this will throws a time_out error as we don't have a 
+valid token to refresh
+                        // console.error('refresh error', err);
+                        this.clearSSOInterval();
+                    });
+                }
+            })
+            .catch(e => {
+                // console.log(e);
+                // if not logged in anywhere, it will throw a token error.
+                this.clearSSOInterval();
+            });
+        return;
+    }
+    if (this.oauthService.getIdTokenExpiration() < new Date().getTime()) {
+        this.userService.removeToken();
+        return this.logout();
+    }
+    this.isLoggedIn = true;
+    this.userService.authenticateWithNID(claims['email']);
+}
+private setupSSOInterval() {
+    this.ssoInterval = setInterval(() => {
+        if (this.isLoggedIn) {
+            clearInterval(this.ssoInterval);
+        } else {
+            this.checkLoginState();
+        }
+    }, 1000);
+}
+private clearSSOInterval() {
+    if (this.ssoInterval) {
+        clearInterval(this.ssoInterval);
+    }
+}
+
+
+public loginWithRedirectUri(redirectUri: string) {
+        Object.assign(this.authConfig, { redirectUri: redirectUri });
+        this.oauthService.configure(this.authConfig);
+        this.authService.initImplicitFlow();
+    }
+	
+	
+this.authService.loadDiscoveryDocument()
+  .then(() => this.authService.tryLogin())
+  .then(() => {
+    if (!this.authService.hasValidAccessToken()) {
+
+      this.authService.silentRefresh()
+        .catch(result => {
+          // See https://openid.net/specs/openid-connect-core-1_0.html#AuthError
+          const errorResponsesRequiringUserInteraction = [
+            'interaction_required',
+            'login_required',
+            'account_selection_required',
+            'consent_required',
+          ];
+
+          if (result && result.reason && errorResponsesRequiringUserInteraction.indexOf(result.reason.error) >= 0) {
+            this.authService.initImplicitFlow();
+          }
+        });
+    }
+});
+
+
+return this.oauthService.loadDiscoveryDocument()
+
+      // Demo amaçlı olarak, önceki aramanın çok yavaş olduğunu varsayıyoruz
+      .then(() => new Promise(resolve => setTimeout(() => resolve(), 1000)))
+
+      // 1. HASH LOGIN:
+      // Yeniden yönlendirme yaptıktan sonra karma bölümü ile giriş yapmayı deneyin
+      // initImplicitFlow'dan IdServer'dan:
+      .then(() => this.oauthService.tryLogin())
+
+      .then(() => {
+        if (this.oauthService.hasValidAccessToken()) {
+          return Promise.resolve();
+        }
+
+        
+        /* 
+        // 2. SILENT LOGIN:
+        // IdServer olduğu için sessiz yenileme ile giriş yapmayı deneyin
+        // kullanıcıyı hatırlamak için bir çerez alabilir, bu yüzden
+        // yönlendirmeyi yapmama:
+        return this.oauthService.silentRefresh()
+          .then(() => Promise.resolve())
+          .catch(result => {
+            // Subset of situations from https://openid.net/specs/openid-connect-core-1_0.html#AuthError
+            // Sadece gönderilmesinin makul ölçüde emin olduğu yerler
+            // IdServer'a kullanıcı yardımcı olacaktır.
+            
+
+            const errorResponsesRequiringUserInteraction = [
+              'interaction_required',
+              'login_required',
+              'account_selection_required',
+              'consent_required',
+            ];
+            console.log(result)    
+            if (result
+              && result.reason
+              && errorResponsesRequiringUserInteraction.indexOf(result.reason.error) >= 0) {
+
+              // 3. ASK FOR LOGIN:
+              // Bu noktada, bizden sormak zorunda olduğumuzu kesin olarak biliyoruz.
+              // kullanıcı giriş yapabilmemiz için onları IdServer'a yönlendiriyoruz
+              // kimlik bilgilerini girin.
+              //
+              // Bunu, DAİMA kullanıcılara giriş yapmaya zorlar.
+              // this.oauthService.initImplicitFlow();
+              //
+              // Bunun yerine şimdi yapacağız:
+              console.warn('Kullanıcı etkileşimi giriş yapmak için gereklidir, kullanıcının manuel olarak giriş yapmasını bekleyeceğiz.');
+              return Promise.resolve();
+            }
+
+            // Gerçeği ele alamayız, sadece problemi
+            // sonraki işleyici.
+            return Promise.reject(result);
+        });
+        */  
+
+
+
+
+
+        
+      })
+
+      .then(() => {
+        this.isDoneLoadingSubject$.next(true);
+
+        // Check for the strings 'undefined' and 'null' just to be sure. Our current
+        // login(...) should never have this, but in case someone ever calls
+        // initImplicitFlow(undefined | null) this could happen.
+        if (this.oauthService.state && this.oauthService.state !== 'undefined' && this.oauthService.state !== 'null') {
+          console.log(this.oauthService.state)
+          console.log('state var, buraya yonlendiriyoruz : ' + this.oauthService.state);
+          this.router.navigateByUrl(this.oauthService.state);
+        }
+      })
+      .catch(() => this.isDoneLoadingSubject$.next(true));
